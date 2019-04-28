@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<head>
+  <title>Geo (spinning))</title>
+</head>
+
+<style>
+body {
+  font-family: "Helvetica Neue", Helvetica, sans-serif;
+  font-size: 14px;
+  color: #333;
+}
+
+path {
+  fill: #87B687;
+  stroke: #777;
+}
+#content {
+  background-color:#283A60;
+}
+
+#content-tag {
+  float: right;
+  text-align: left;
+  margin-right: 340px;
+  margin-top: -460px;
+  color: #fff;
+  font-family: avenir;
+  font-size: 2rem;
+}
+
+</style>
+
+<body>
+  <div id="content" >
+    <canvas width="800" height="600" style="margin-left: -100px;"></canvas>
+  </div>
+  <div id="content-tag">
+    <span style="color=#000;"> <h1> THE GREAT <br> EARTHQUAKES</h1></span>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/4.2.2/d3.min.js"></script>
+  <script src="https://unpkg.com/topojson@3"></script>
+
+  <script>
+      var geojson = {}
+      var sphere = ({type: "Sphere"})
+      var land = {}
+      var Equakes ={}
+
+
+      var context = d3.select('#content canvas')
+        .node()
+        .getContext('2d');
+
+      var projection = d3.geoOrthographic()
+        .scale(180);
+
+      var geoGenerator = d3.geoPath()
+        .projection(projection)
+        .pointRadius(4)
+        .context(context);
+
+      var yaw = 300;
+
+      function magnitudeRadius() {
+        var scale = d3.scaleSqrt().domain([0, 100]).range([0, 6]);
+        return function(quake) {
+          return scale((Math.exp(quake.properties.mag)));
+        }
+      }
+
+      function update() {
+        projection.rotate([yaw, 0])
+
+        context.clearRect(0, 0, 800, 800);
+
+        context.lineWidth = 1.5;
+        context.fillStyle = "#283A60";
+        context.beginPath(),geoGenerator(sphere), context.fill(), context.stroke();
+
+
+        context.lineWidth = 0.2;
+        context.strokeStyle = '#333';
+        context.fillStyle="#000";
+        context.beginPath();
+        geoGenerator(land),
+        context.fill();
+        context.stroke();
+
+        // Graticule
+        // var graticule = d3.geoGraticule();
+        // context.beginPath();
+        // context.strokeStyle = '#ccc';
+        // geoGenerator(graticule());
+        // context.stroke();
+        // Draw the earthquakes.
+
+        const color = d3.color('#ffba00');
+        color.opacity = 0.25;
+        context.fillStyle = color;
+        var circles = Equakes.features;
+        geoGenerator.pointRadius(magnitudeRadius());
+        Equakes.features.forEach(d => {context.beginPath(), geoGenerator(d), context.fill();});
+        geoGenerator.pointRadius(null);
+        yaw += 3
+      }
+
+
+      // REQUEST DATA : other format
+      // d3.json('https://gist.githubusercontent.com/d3indepth/f28e1c3a99ea6d84986f35ac8646fac7/raw/c58cede8dab4673c91a3db702d50f7447b373d98/ne_110m_land.json', function(err, json) {
+      //   geojson = json;
+      //   window.setInterval(update, 100);
+      // })
+
+      d3.json('https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/2.5_month.geojson', function(err, quakes) {
+        Equakes = quakes;
+      })
+
+      d3.json('https://unpkg.com/world-atlas@1/world/110m.json', function(err, json) {
+        geojson = json;
+        land = topojson.feature(geojson, geojson.objects.countries)
+        window.setInterval(update, 100);
+
+      })
+
+
+
+
+  </script>
+</body>
+</html>

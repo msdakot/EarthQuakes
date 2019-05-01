@@ -112,17 +112,17 @@ path {
       //   geojson = json;
       //   window.setInterval(update, 100);
       // })
-
-      d3.json('https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/2.5_month.geojson', function(err, quakes) {
-        Equakes = quakes;
-      })
-
       d3.json('https://unpkg.com/world-atlas@1/world/110m.json', function(err, json) {
         geojson = json;
         land = topojson.feature(geojson, geojson.objects.countries)
-        window.setInterval(update, 100);
-
       })
+
+      d3.json('https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/2.5_month.geojson', function(err, quakes) {
+        Equakes = quakes;
+        window.setInterval(update, 100);
+      })
+
+
 
 
 

@@ -1,11 +1,6 @@
 """
-This data visualization makes use of Fireballs NASA data open API, describing
-all bolid impact events in Earth, registered by US goverment since 1988.
-
-<https://ssd-api.jpl.nasa.gov/doc/fireball.html>
-
-Field 	  Description
-__________________________________________________________________________
+This data visualization makes use of Earthquakes NCEDCAPI, describing
+all quakes events in Northern California, registered by US goverment since 1988.
 
 """
 

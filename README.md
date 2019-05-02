@@ -10,5 +10,5 @@ Credits: Thank you Nick hand (intstructor), Ivan Nieto (tutorials on Dash), Kepl
 
 The final application has been launched on heroku! 
 
-https://msdakot.github.io/EarthQuakes/
+https://e-quakes.herokuapp.com/
 

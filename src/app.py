@@ -1,6 +1,11 @@
 """
-This data visualization makes use of Earthquakes NCEDCAPI, describing
-all quakes events in Northern California, registered by US goverment since 1988.
+This data visualization makes use of Fireballs NASA data open API, describing
+all bolid impact events in Earth, registered by US goverment since 1988.
+
+<https://ssd-api.jpl.nasa.gov/doc/fireball.html>
+
+Field 	  Description
+__________________________________________________________________________
 
 """
 
@@ -15,12 +20,11 @@ import dash_html_components as html
 import numpy as np
 import pandas as pd
 import requests
-import geopandas as gpd
 import datetime
-from shapely.geometry import Point
 
-import plotly.offline as py
 import plotly.graph_objs as go
+
+from dash.dependencies import Input, Output
 
 
 from dash.dependencies import Input, Output
@@ -31,8 +35,8 @@ mapbox_access_token = 'pk.eyJ1IjoiaXZhbm5pZXRvIiwiYSI6ImNqNTU0dHFrejBkZmoycW9hZT
 
 app = dash.Dash(name=__name__)
 app.config.supress_callback_exceptions = True
-# server = app.server
-# server.secret_key = os.environ.get("SECRET_KEY", "secret")
+server = app.server
+server.secret_key = os.environ.get("SECRET_KEY", "secret")
 
 # Color scale for heatmap (green-to-red)
 color_scale = color_scale.GREEN_RED
@@ -44,42 +48,42 @@ app.css.append_css({
     "external_url": [css_bootstrap_url, css_url],
 })
 
+if(os.path.isfile('src/data/earthquakes-smaller.csv')):
+    df = pd.read_csv('src/data/earthquakes-smaller.csv')
+else:
+
 # calling the data 
 # credits : https://curl.trillworks.com for converting the curl command to python request code
 
-headers = {
-    'Pragma': 'no-cache',
-    'Origin': 'http://ncedc.org',
-    'Accept-Encoding': 'gzip, deflate',
-}
+    headers = {
+        'Pragma': 'no-cache',
+        'Origin': 'http://ncedc.org',
+        'Accept-Encoding': 'gzip, deflate',
+    }
 
-data = {
-  'format': 'nccsv',
-  'mintime': '1990/01/01,00:00:00',
-  'maxtime': '',
-  'minmag': '2.5',
-  'maxmag': '',
-  'mindepth': '',
-  'maxdepth': '',
-  'minlat': '',
-  'maxlat': '',
-  'minlon': '',
-  'maxlon': '',
-  'etype': 'E',
-  'keywds': '',
-  'outputloc': 'web',
-  'searchlimit': '1000000'
-}
+    data = {
+      'format': 'nccsv',
+      'mintime': '1990/01/01,00:00:00',
+      'maxtime': '',
+      'minmag': '2.5',
+      'maxmag': '',
+      'mindepth': '',
+      'maxdepth': '',
+      'minlat': '',
+      'maxlat': '',
+      'minlon': '',
+      'maxlon': '',
+      'etype': 'E',
+      'keywds': '',
+      'outputloc': 'web',
+      'searchlimit': '1000000'
+    }
 
-response = requests.post('http://www.ncedc.org/cgi-bin/catalog-search2.pl', headers=headers, data=data)
+    response = requests.post('http://www.ncedc.org/cgi-bin/catalog-search2.pl', headers=headers, data=data)
 
-d=response.text[290:-22]
-df = pd.read_csv(io.StringIO(d))
+    d=response.text[290:-22]
+    df = pd.read_csv(io.StringIO(d))
 
-
-geometry = [Point(xy) for xy in zip(df['Longitude'], df['Latitude'])]
-
-df= gpd.GeoDataFrame(df,crs={'init' :'epsg:4326'}, geometry=geometry)
 
 # data modifications 
 
@@ -89,7 +93,7 @@ df['month']= df['date'].dt.month
 
 
 # Get all valuable column headers
-to_skip = ['Latitude',  'Longitude',  'year', 'date', 'DateTime','Source',"EventID","geometry",'month']
+to_skip = ['Latitude',  'Longitude',  'year', 'date', 'DateTime','Source',"EventID",'month']
 main_columns = [x for x in df.columns if x not in to_skip]
 
 
@@ -586,9 +590,9 @@ def update_mid(year_value):
             continue
         dff = df[df['year'] == year]
         if(year == year_value):
-            marker_color = '#C2FF0A'
+            marker_color = 'rgb(153, 190, 149)'
         elif year_value >= 2003:
-              marker_color = '#FF0A47'        
+              marker_color = 'rgb(248, 177, 149)'        
         trace = go.Box(
             y=round(dff['Depth'],2),
             name=str(year),
@@ -603,12 +607,9 @@ def update_mid(year_value):
         )
         traces.append(trace)
         
-    data = go.Data(traces,
-                   style={
-                       'color': '#000'})
+ 
 
     layout = go.Layout(
-#         title='xyc',
         yaxis=dict(
             autorange=True,
             showgrid=True,
@@ -631,7 +632,7 @@ def update_mid(year_value):
         plot_bgcolor='#191a1a',
     )
     return go.Figure(
-        data=data,
+        data=traces,
         layout=layout
     )
 
@@ -755,6 +756,6 @@ def update_map(year_value):
 
 # Run dash server
 if __name__ == '__main__':
-#     app.run_server(debug=True)
-   app.run_server(host="0.0.0.0", port=5000, debug=True)
+     app.run_server(debug=True)
+#   app.run_server(host="0.0.0.0", port=5000, debug=True)
     
